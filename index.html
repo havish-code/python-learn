@@ -416,6 +416,13 @@ body::before{
     margin-bottom:20px;
 }
 
+.lesson-header-right{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
 .lesson-tag{
     display:inline-block;
     padding:4px 8px;
@@ -449,6 +456,28 @@ body::before{
     font-weight:900;
     font-size:.9rem;
     white-space:nowrap;
+}
+
+#direct-next-btn{
+    padding:8px 16px;
+    background:var(--green);
+    color:#000;
+    border:2px solid #166534;
+    border-radius:7px;
+    font-weight:900;
+    font-size:.88rem;
+    transition:all .2s ease;
+    white-space:nowrap;
+}
+
+#direct-next-btn:disabled{
+    background:var(--bg3);
+    color:var(--muted);
+    border-color:var(--border);
+    opacity:.7;
+    cursor:not-allowed;
+    filter:none;
+    transform:none;
 }
 
 .lesson-body{
@@ -835,7 +864,13 @@ button:disabled{
         align-items:flex-start;
     }
 
-    .lesson-reward{
+    .lesson-header-right{
+        width:100%;
+        display:flex;
+        flex-direction:column;
+    }
+
+    .lesson-reward, #direct-next-btn{
         width:100%;
         text-align:center;
     }
@@ -940,8 +975,11 @@ button:disabled{
                 <div class="lesson-game" id="lesson-game">🎮 Game</div>
             </div>
 
-            <div class="lesson-reward">
-                Reward: <span id="lesson-xp">+0 XP</span>
+            <div class="lesson-header-right">
+                <div class="lesson-reward">
+                    Reward: <span id="lesson-xp">+0 XP</span>
+                </div>
+                <button id="direct-next-btn" type="button">Next Chapter →</button>
             </div>
         </div>
 
@@ -1112,7 +1150,7 @@ const LESSONS = [
     teaching:`<p>The <b>input()</b> function allows a Python program to receive information from the user.</p><p>When Python reaches <code>input()</code>, it waits for the user to type something.</p><p>The information received from <code>input()</code> is stored as text, also called a string.</p><p>You can save the result in a variable such as <code>name</code>.</p>`,
     objective:`Ask the user for their name and greet them.`,
     concepts:`<ul><li><b>input() Function</b> receives information from the user.</li><li><b>User Input</b> is normally returned as a string.</li><li><b>String Concatenation</b> can combine pieces of text.</li></ul>`,
-    task:`<p>Ask the user:</p><p><code>What is your name?</code></p><p>Then display a greeting containing the name.</p><p>Example result: <code>Hello, Alex!</code></p>`,
+    task:`<p>Ask the user:</p><p><code>What is your name?</code></p><p>Then display a greeting containing the name.</p><p>Example result: <code>Hello, Havish!</code></p>`,
     starter:"",
     expected:(out,code)=>{
         return /input\s*\(/.test(code) && /print\s*\(/.test(code) && /name/i.test(code);
@@ -1360,7 +1398,7 @@ const ACHIEVEMENTS={
     "🐉 Python Hero! Ultimate Quest Complete!":"👑 You have completed the entire Python Quest! You are a true Python Hero!"
 };
 
-const STORAGE_KEY="python-quest-save-v9";
+const STORAGE_KEY="python-quest-save-v10";
 
 const STATE={
     pyodide:null,
@@ -1470,6 +1508,30 @@ function updateStats(){
     $("xp-fill").style.width=`${Math.min(100, STATE.xp/needed*100)}%`;
 }
 
+function updateNextButtonState(){
+    const nextBtn = $("direct-next-btn");
+    const index = STATE.currentLesson;
+    const isCompleted = STATE.completed.has(index);
+
+    if(index === LESSONS.length - 1){
+        nextBtn.textContent = "Finish Quest 🏆";
+        nextBtn.disabled = !isCompleted;
+    } else if(index < 2){
+        // Chapters 1 & 2 are reading topics, always unlocked
+        nextBtn.textContent = "Next Chapter →";
+        nextBtn.disabled = false;
+    } else {
+        // Chapters 3+ are locked until completed
+        if(isCompleted){
+            nextBtn.textContent = "Next Chapter →";
+            nextBtn.disabled = false;
+        } else {
+            nextBtn.textContent = "🔒 Complete Task First";
+            nextBtn.disabled = true;
+        }
+    }
+}
+
 function renderSidebar(){
     const list=$("lesson-list");
     list.replaceChildren();
@@ -1548,14 +1610,13 @@ function loadLesson(index){
         $("lesson-hint").innerHTML = lesson.hint;
     }
 
-    // Clean empty coding workspace on every lesson
     $("code-editor").value = "";
-
     $("hint-card").hidden=true;
     $("victory-screen").hidden=true;
 
     clearOutput();
     renderSidebar();
+    updateNextButtonState();
     saveState();
     
     $("lesson-view").scrollTop = 0;
@@ -1611,7 +1672,6 @@ async function executePython(code){
     }
     if(!code.trim()) return "";
 
-    // Automatically load packages over internet via micropip/pyodide
     try{
         await STATE.pyodide.loadPackagesFromImports(code);
     }catch(err){
@@ -1721,33 +1781,34 @@ async function submitCode(){
 
 function completeLesson(lesson){
     const index=STATE.currentLesson;
-    if(STATE.completed.has(index)){
-        showToast("✅", "Already Complete", "This lesson has already been completed.");
-        return;
+    const isAlreadyCompleted = STATE.completed.has(index);
+
+    if(!isAlreadyCompleted){
+        STATE.completed.add(index);
+        STATE.xp+=lesson.xp;
+        STATE.coins+=10;
+
+        let levelUp=false;
+        while(STATE.xp>=STATE.level*100){
+            STATE.xp-=STATE.level*100;
+            STATE.level++;
+            levelUp=true;
+        }
+
+        STATE.hearts=Math.min(5, STATE.hearts+1);
+        updateStats();
+        saveState();
+
+        if(levelUp){
+            showToast("🎉", "Level Up!", `You reached Level ${STATE.level}!`);
+        }
+
+        if(lesson.achievement){
+            showToast("🏆", "Achievement Unlocked!", ACHIEVEMENTS[lesson.achievement] || lesson.achievement);
+        }
     }
 
-    STATE.completed.add(index);
-    STATE.xp+=lesson.xp;
-    STATE.coins+=10;
-
-    let levelUp=false;
-    while(STATE.xp>=STATE.level*100){
-        STATE.xp-=STATE.level*100;
-        STATE.level++;
-        levelUp=true;
-    }
-
-    STATE.hearts=Math.min(5, STATE.hearts+1);
-    updateStats();
-    saveState();
-
-    if(levelUp){
-        showToast("🎉", "Level Up!", `You reached Level ${STATE.level}!`);
-    }
-
-    if(lesson.achievement){
-        showToast("🏆", "Achievement Unlocked!", ACHIEVEMENTS[lesson.achievement] || lesson.achievement);
-    }
+    updateNextButtonState();
 
     const finalLesson=index===LESSONS.length-1;
     $("victory-text").innerHTML=finalLesson
@@ -1813,7 +1874,6 @@ async function initPyodide(){
             indexURL:"https://cdn.jsdelivr.net/pyodide/v0.26.2/full/"
         });
 
-        // Load micropip to allow installing external packages from PyPI over the web
         await STATE.pyodide.loadPackage("micropip");
 
         STATE.pyodide.runPython(`
@@ -1874,9 +1934,9 @@ window.addEventListener("DOMContentLoaded", ()=>{
     $("reset-code-btn").addEventListener("click", resetCode);
     $("clear-output-btn").addEventListener("click", clearOutput);
     $("next-lesson-btn").addEventListener("click", nextLesson);
+    $("direct-next-btn").addEventListener("click", nextLesson);
     $("reset-btn").addEventListener("click", resetProgress);
     
-    // Responsive Navigation Drawer handlers
     $("menu-btn").addEventListener("click", ()=>toggleSidebar());
     $("sidebar-backdrop").addEventListener("click", ()=>toggleSidebar(true));
 
