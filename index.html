@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<meta name="theme-color" content="#080c16">
+
+<!-- Search Engine Optimization (SEO) Meta Tags -->
+<title>Python Quest — Learn Python Interactively Like a Game | By Havish Trivedi</title>
+<meta name="description" content="Play Python Quest: An interactive, gamified in-browser Python course with 18 RPG-style missions, live code execution, package imports, and real-time XP rewards.">
+<meta name="keywords" content="Python Quest, Learn Python, Python Game, Interactive Python, Havish Trivedi, Pyodide Python, Python Coding Missions">
+<meta name="author" content="Havish Trivedi">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph / Social Sharing -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Python Quest — Learn Python Like a Game">
+<meta property="og:description" content="Master Python step-by-step through interactive coding challenges, quests, and XP leveling.">
+<meta property="og:image" content="https://raw.githubusercontent.com/github/explore/main/topics/python/python.png">
+
+<style>
+*, *::before, *::after{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    min-width:0;
+}
+
+:root{
+    --bg0:#070a12;
+    --bg1:#0d1322;
+    --bg2:#151d32;
+    --bg3:#202b48;
+    --border:#303d67;
+    --text:#eef2ff;
+    --muted:#9ba8c9;
+    --green:#4ade80;
+    --yellow:#facc15;
+    --blue:#60a5fa;
+    --purple:#c084fc;
+    --red:#f87171;
+    --cyan:#22d3ee;
+    --shadow:0 12px 32px rgba(0,0,0,.45);
+    --header-h:64px;
+    --sidebar-w:300px;
+}
+
+html,body{
+    width:100%;
+    height:100%;
+    font-family:"Segoe UI", system-ui, -apple-system, sans-serif;
+    background:var(--bg0);
+    color:var(--text);
+    overflow:hidden;
+}
+
+#lesson-title,
+#lesson-tag,
+#lesson-game,
+.lesson-reward,
+.lesson-tag,
+.card h2,
+.card p,
+.card li,
+.brand{
+    word-wrap:break-word;
+    overflow-wrap:anywhere;
+}
+
+button, textarea{
+    font:inherit;
+}
+
+button{
+    cursor:pointer;
+    user-select:none;
+    -webkit-tap-highlight-color:transparent;
+}
+
+[hidden]{
+    display:none!important;
+}
+
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background:
+        radial-gradient(circle at 15% 20%, rgba(74,222,128,.08), transparent 35%),
+        radial-gradient(circle at 85% 75%, rgba(192,132,252,.08), transparent 35%);
+    z-index:0;
+}
+
+/* Splash Screen */
+#splash{
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+        radial-gradient(circle at center, rgba(74,222,128,.12), transparent 45%),
+        #050812;
+    animation:splashOut .7s ease 2.2s forwards;
+    padding:20px;
+}
+
+.splash-content{
+    text-align:center;
+    animation:splashIn .8s cubic-bezier(0.16, 1, 0.3, 1);
+    max-width:90vw;
+}
+
+.splash-python{
+    font-size:clamp(3.5rem, 10vw, 5.5rem);
+    animation:snakeFloat 1.4s ease-in-out infinite;
+}
+
+.splash-title{
+    margin-top:12px;
+    font-size:clamp(1.8rem, 6vw, 3.8rem);
+    font-weight:900;
+    color:var(--green);
+    line-height:1.15;
+    text-shadow:0 0 15px rgba(74,222,128,.5), 4px 4px 0 rgba(0,0,0,.5);
+}
+
+.splash-subtitle{
+    margin-top:8px;
+    font-size:clamp(0.85rem, 2.5vw, 1.15rem);
+    color:var(--muted);
+    letter-spacing:2px;
+}
+
+.splash-created{
+    margin-top:18px;
+    color:var(--yellow);
+    font-size:clamp(0.8rem, 2vw, 1rem);
+    letter-spacing:1px;
+}
+
+.splash-loader{
+    width:min(260px, 80vw);
+    height:6px;
+    margin:24px auto 0;
+    border-radius:10px;
+    overflow:hidden;
+    background:var(--bg2);
+    border:1px solid var(--border);
+}
+
+.splash-loader span{
+    display:block;
+    height:100%;
+    width:0;
+    background:linear-gradient(90deg,var(--yellow),var(--green));
+    animation:loading 2s linear forwards;
+}
+
+@keyframes splashIn{
+    from{ opacity:0; transform:scale(.85) translateY(20px); }
+    to{ opacity:1; transform:scale(1) translateY(0); }
+}
+
+@keyframes splashOut{
+    to{ opacity:0; visibility:hidden; pointer-events:none; }
+}
+
+@keyframes loading{
+    to{ width:100%; }
+}
+
+@keyframes snakeFloat{
+    0%,100%{ transform:translateY(0) rotate(-3deg); }
+    50%{ transform:translateY(-10px) rotate(3deg); }
+}
+
+/* Top Bar */
+#topbar{
+    height:var(--header-h);
+    position:relative;
+    z-index:40;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 clamp(12px, 3vw, 24px);
+    background:rgba(13,19,34,.96);
+    backdrop-filter:blur(10px);
+    border-bottom:2px solid var(--border);
+    box-shadow:var(--shadow);
+    gap:10px;
+}
+
+.nav-left{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.menu-toggle{
+    display:none;
+    background:var(--bg2);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:7px;
+    width:38px;
+    height:38px;
+    font-size:1.2rem;
+    align-items:center;
+    justify-content:center;
+    transition:.15s;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:var(--green);
+    font-size:clamp(1.1rem, 2.5vw, 1.3rem);
+    font-weight:900;
+    white-space:nowrap;
+}
+
+.brand-logo{
+    font-size:clamp(1.4rem, 3vw, 1.8rem);
+}
+
+.stats{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.stat{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    height:36px;
+    padding:0 10px;
+    background:var(--bg2);
+    border:1.5px solid var(--border);
+    border-radius:8px;
+    font-size:0.85rem;
+    font-weight:800;
+    white-space:nowrap;
+}
+
+.stat.xp{
+    width:clamp(140px, 20vw, 230px);
+}
+
+.xp-bar{
+    flex:1;
+    height:8px;
+    background:var(--bg0);
+    border:1px solid var(--border);
+    border-radius:10px;
+    overflow:hidden;
+}
+
+#xp-fill{
+    height:100%;
+    width:0;
+    background:linear-gradient(90deg,var(--yellow),var(--green));
+    transition:width .4s ease;
+}
+
+/* Python Status Banner */
+.py-status{
+    position:fixed;
+    top:var(--header-h);
+    left:50%;
+    transform:translateX(-50%);
+    z-index:60;
+    width:max-content;
+    max-width:92vw;
+    padding:6px 14px;
+    background:var(--bg2);
+    border:1.5px solid var(--blue);
+    border-top:0;
+    border-radius:0 0 8px 8px;
+    color:var(--blue);
+    font-size:.78rem;
+    font-weight:800;
+    box-shadow:var(--shadow);
+    text-align:center;
+}
+
+.py-status.ready{
+    color:var(--green);
+    border-color:var(--green);
+}
+
+/* Application Layout */
+#app{
+    display:grid;
+    grid-template-columns:var(--sidebar-w) 1fr;
+    height:calc(100% - var(--header-h));
+    position:relative;
+    z-index:10;
+}
+
+/* Sidebar Navigation */
+#sidebar-backdrop{
+    display:none;
+}
+
+#sidebar{
+    background:var(--bg1);
+    border-right:2px solid var(--border);
+    padding:16px 12px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+#sidebar h3{
+    color:var(--yellow);
+    font-size:.75rem;
+    letter-spacing:1.5px;
+    padding:0 4px;
+}
+
+#lesson-list{
+    list-style:none;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    flex:1;
+}
+
+#lesson-list li{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px;
+    background:var(--bg2);
+    border:1.5px solid var(--border);
+    border-radius:8px;
+    transition:all .15s ease;
+    font-size:.85rem;
+    line-height:1.3;
+}
+
+#lesson-list li:not(.locked){
+    cursor:pointer;
+}
+
+#lesson-list li:hover:not(.locked){
+    transform:translateX(3px);
+    border-color:var(--blue);
+}
+
+#lesson-list li.active{
+    border-color:var(--green);
+    background:linear-gradient(90deg, var(--bg2), rgba(74,222,128,.15));
+    box-shadow:0 0 12px rgba(74,222,128,.15);
+}
+
+#lesson-list li.locked{
+    opacity:.35;
+    filter:grayscale(1);
+    cursor:not-allowed;
+}
+
+#lesson-list li.completed::after{
+    content:"✓";
+    margin-left:auto;
+    color:var(--green);
+    font-weight:900;
+}
+
+.lvl-num{
+    min-width:24px;
+    height:24px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--bg3);
+    border-radius:5px;
+    color:var(--muted);
+    font-size:.72rem;
+    font-weight:bold;
+    flex-shrink:0;
+}
+
+.completed .lvl-num{
+    background:var(--green);
+    color:#000;
+}
+
+.sidebar-footer{
+    margin-top:auto;
+    padding-top:10px;
+    border-top:1px solid var(--border);
+}
+
+/* Lesson Viewport */
+#lesson-view{
+    overflow-y:auto;
+    padding:clamp(16px, 3vw, 32px);
+    scroll-behavior:smooth;
+}
+
+.lesson-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:14px;
+    padding-bottom:16px;
+    border-bottom:2px dashed var(--border);
+    margin-bottom:20px;
+}
+
+.lesson-tag{
+    display:inline-block;
+    padding:4px 8px;
+    margin-bottom:6px;
+    background:var(--purple);
+    color:#000;
+    border-radius:4px;
+    font-size:.68rem;
+    font-weight:900;
+    letter-spacing:1.5px;
+}
+
+#lesson-title{
+    color:var(--green);
+    font-size:clamp(1.4rem, 3.5vw, 2.1rem);
+    line-height:1.2;
+}
+
+.lesson-game{
+    color:var(--muted);
+    margin-top:4px;
+    font-size:clamp(.85rem, 2vw, .95rem);
+}
+
+.lesson-reward{
+    padding:8px 14px;
+    background:var(--bg2);
+    border:2px solid var(--yellow);
+    border-radius:7px;
+    color:var(--yellow);
+    font-weight:900;
+    font-size:.9rem;
+    white-space:nowrap;
+}
+
+.lesson-body{
+    display:grid;
+    grid-template-columns:minmax(320px, 1fr) minmax(360px, 1.15fr);
+    gap:20px;
+    align-items:start;
+}
+
+.lesson-pane,
+.code-pane{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+}
+
+/* Cards */
+.card{
+    padding:clamp(14px, 2.5vw, 20px);
+    background:rgba(13,19,34,.95);
+    border:1.5px solid var(--border);
+    border-radius:10px;
+    box-shadow:var(--shadow);
+}
+
+.card h2{
+    margin-bottom:10px;
+    color:var(--yellow);
+    font-size:clamp(.92rem, 2vw, 1.05rem);
+    letter-spacing:.5px;
+}
+
+.card p,
+.card li{
+    line-height:1.65;
+    font-size:clamp(.88rem, 1.8vw, .95rem);
+}
+
+.card p+p{
+    margin-top:10px;
+}
+
+.card ul{
+    padding-left:20px;
+}
+
+.card code{
+    padding:2px 6px;
+    border-radius:4px;
+    background:var(--bg0);
+    color:var(--green);
+    font-family:Consolas, Monaco, monospace;
+    font-size:.88em;
+}
+
+.teaching-card{
+    border-left:4px solid var(--blue);
+}
+
+.task-card{
+    border:2px solid var(--yellow);
+    background:linear-gradient(135deg, rgba(250,204,21,.06), rgba(13,19,34,.96));
+}
+
+.task-title{
+    color:var(--yellow);
+    font-size:1.05rem;
+    font-weight:900;
+    margin-bottom:8px;
+}
+
+.task-badge{
+    display:inline-block;
+    margin-bottom:8px;
+    padding:3px 8px;
+    background:rgba(250,204,21,.15);
+    border:1px solid var(--yellow);
+    border-radius:4px;
+    color:var(--yellow);
+    font-size:.68rem;
+    font-weight:900;
+}
+
+.hint-card{
+    border-color:var(--purple);
+    background:rgba(192,132,252,.06);
+}
+
+#lesson-hint{
+    color:#d8b4fe;
+    line-height:1.6;
+}
+
+/* Compiler & Editor */
+.code-card{
+    padding:0;
+    overflow:hidden;
+}
+
+.code-header,
+.output-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+    padding:10px 14px;
+    background:var(--bg2);
+    border-bottom:1.5px solid var(--border);
+    color:var(--muted);
+    font-family:Consolas, Monaco, monospace;
+    font-size:.8rem;
+}
+
+.code-actions{
+    display:flex;
+    gap:6px;
+}
+
+#code-editor{
+    width:100%;
+    min-height:300px;
+    resize:vertical;
+    padding:14px;
+    border:0;
+    outline:0;
+    background:#050811;
+    color:#eef2ff;
+    font-family:Consolas, "Courier New", monospace;
+    font-size:14px;
+    line-height:1.6;
+    tab-size:4;
+    -webkit-overflow-scrolling:touch;
+    overflow-x:auto;
+}
+
+.run-bar{
+    display:flex;
+    gap:10px;
+    padding:10px 14px;
+    background:var(--bg2);
+    border-top:1.5px solid var(--border);
+}
+
+/* Buttons */
+.btn-primary,
+.btn-success,
+.btn-small{
+    border:2px solid;
+    border-radius:6px;
+    font-weight:900;
+    transition:all .15s ease;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+}
+
+.btn-primary,
+.btn-success{
+    padding:10px 20px;
+    font-size:.9rem;
+}
+
+.btn-primary{
+    background:var(--green);
+    color:#000;
+    border-color:#166534;
+}
+
+.btn-success{
+    background:var(--purple);
+    color:#000;
+    border-color:#6b21a8;
+}
+
+.btn-small{
+    padding:5px 10px;
+    background:var(--bg3);
+    color:var(--text);
+    border-color:var(--border);
+    font-size:.76rem;
+}
+
+button:hover:not(:disabled){
+    filter:brightness(1.15);
+    transform:translateY(-1px);
+}
+
+button:active:not(:disabled){
+    transform:translateY(1px);
+}
+
+button:disabled{
+    opacity:.5;
+    cursor:not-allowed;
+}
+
+/* Output Console */
+.output-card{
+    padding:0;
+    overflow:hidden;
+}
+
+#output{
+    min-height:140px;
+    max-height:280px;
+    overflow:auto;
+    margin:0;
+    padding:14px;
+    background:#03060b;
+    color:var(--green);
+    font-family:Consolas, Monaco, monospace;
+    font-size:13px;
+    line-height:1.5;
+    white-space:pre-wrap;
+    word-break:break-word;
+    -webkit-overflow-scrolling:touch;
+}
+
+#output.err{
+    color:var(--red);
+}
+
+.output-meta{
+    padding:8px 14px;
+    background:#080d17;
+    border-top:1px solid var(--border);
+    color:var(--muted);
+    font-size:.74rem;
+}
+
+/* Victory Screen Modal */
+#victory-screen{
+    position:fixed;
+    inset:0;
+    z-index:100;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:rgba(4,7,14,.92);
+    backdrop-filter:blur(6px);
+}
+
+.victory-content{
+    width:min(480px, 100%);
+    padding:clamp(24px, 6vw, 40px);
+    text-align:center;
+    background:var(--bg1);
+    border:2.5px solid var(--yellow);
+    border-radius:14px;
+    box-shadow:0 0 45px rgba(250,204,21,.25);
+}
+
+.victory-emoji{
+    font-size:clamp(3.5rem, 8vw, 5rem);
+    animation:bounce 1s infinite;
+}
+
+.victory-content h1{
+    margin:10px 0;
+    color:var(--yellow);
+    font-size:clamp(1.6rem, 4vw, 2.2rem);
+}
+
+.victory-content p{
+    margin-bottom:22px;
+    color:var(--muted);
+    line-height:1.6;
+    font-size:clamp(.9rem, 2vw, 1rem);
+}
+
+/* Toast Alerts */
+.toast{
+    position:fixed;
+    right:clamp(12px, 3vw, 24px);
+    bottom:clamp(12px, 3vw, 24px);
+    z-index:200;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    width:min(380px, calc(100vw - 24px));
+    padding:12px 16px;
+    background:var(--bg1);
+    border:2px solid var(--yellow);
+    border-radius:10px;
+    box-shadow:var(--shadow);
+    animation:slideIn .25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toast #toast-icon{
+    font-size:1.8rem;
+    flex-shrink:0;
+}
+
+.toast-title{
+    color:var(--yellow);
+    font-weight:900;
+    font-size:.9rem;
+}
+
+.toast-desc{
+    margin-top:2px;
+    color:var(--muted);
+    font-size:.8rem;
+    line-height:1.3;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 900px){
+    .menu-toggle{
+        display:inline-flex;
+    }
+
+    #app{
+        grid-template-columns:1fr;
+    }
+
+    #sidebar{
+        position:fixed;
+        top:var(--header-h);
+        left:0;
+        bottom:0;
+        width:min(320px, 85vw);
+        z-index:50;
+        transform:translateX(-100%);
+        transition:transform .25s ease;
+        box-shadow:var(--shadow);
+    }
+
+    #sidebar.open{
+        transform:translateX(0);
+    }
+
+    #sidebar-backdrop{
+        display:block;
+        position:fixed;
+        inset:0;
+        top:var(--header-h);
+        background:rgba(0,0,0,.65);
+        backdrop-filter:blur(4px);
+        z-index:45;
+        opacity:0;
+        pointer-events:none;
+        transition:opacity .25s ease;
+    }
+
+    #sidebar-backdrop.open{
+        opacity:1;
+        pointer-events:auto;
+    }
+
+    .lesson-body{
+        grid-template-columns:1fr;
+    }
+
+    .stat.xp{
+        width:140px;
+    }
+}
+
+@media (max-width: 600px){
+    #topbar{
+        padding:8px 12px;
+    }
+
+    .stats{
+        gap:5px;
+    }
+
+    .stat{
+        padding:0 6px;
+        font-size:.78rem;
+        height:32px;
+    }
+
+    .stat.xp{
+        display:none;
+    }
+
+    .lesson-header{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .lesson-reward{
+        width:100%;
+        text-align:center;
+    }
+
+    .run-bar{
+        flex-direction:column;
+    }
+
+    .run-bar .btn-primary,
+    .run-bar .btn-success{
+        width:100%;
+        padding:12px;
+    }
+}
+
+/* Touch Device Optimization */
+@media (hover: none) and (pointer: coarse){
+    button, 
+    #lesson-list li:not(.locked){
+        min-height:44px;
+    }
+}
+
+/* Scrollbars */
+::-webkit-scrollbar{ width:6px; height:6px; }
+::-webkit-scrollbar-track{ background:var(--bg0); }
+::-webkit-scrollbar-thumb{ background:var(--bg3); border-radius:4px; }
+::-webkit-scrollbar-thumb:hover{ background:var(--blue); }
+</style>
+</head>
+
+<body>
+
+<div id="splash">
+    <div class="splash-content">
+        <div class="splash-python">🐍</div>
+        <div class="splash-title">Learn Python Like a Game</div>
+        <div class="splash-subtitle">ENTER THE PYTHON QUEST</div>
+        <h6 class="splash-created">Created by Havish Trivedi</h6>
+        <div class="splash-loader">
+            <span></span>
+        </div>
+    </div>
+</div>
+
+<header id="topbar">
+    <div class="nav-left">
+        <button id="menu-btn" class="menu-toggle" aria-label="Toggle Navigation">☰</button>
+        <div class="brand">
+            <span class="brand-logo">🐍</span>
+            <span>Python Quest</span>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat">
+            <span>⚔️</span>
+            <span id="stat-level">1</span>
+        </div>
+
+        <div class="stat xp">
+            <div class="xp-bar">
+                <div id="xp-fill"></div>
+            </div>
+            <span id="stat-xp">0 / 100 XP</span>
+        </div>
+
+        <div class="stat">
+            <span>❤️</span>
+            <span id="stat-hearts">5</span>
+        </div>
+
+        <div class="stat">
+            <span>🪙</span>
+            <span id="stat-coins">0</span>
+        </div>
+    </div>
+</header>
+
+<div id="py-status" class="py-status">
+    🐍 Loading Python interpreter...
+</div>
+
+<div id="sidebar-backdrop"></div>
+
+<main id="app">
+    <nav id="sidebar">
+        <h3>PYTHON ROADMAP</h3>
+        <ol id="lesson-list"></ol>
+        <div class="sidebar-footer">
+            <button id="reset-btn" class="btn-small" style="width:100%;">
+                ↻ Reset Progress
+            </button>
+        </div>
+    </nav>
+
+    <section id="lesson-view">
+        <div class="lesson-header">
+            <div>
+                <div class="lesson-tag" id="lesson-tag">CHAPTER 1</div>
+                <h1 id="lesson-title">Lesson Title</h1>
+                <div class="lesson-game" id="lesson-game">🎮 Game</div>
+            </div>
+
+            <div class="lesson-reward">
+                Reward: <span id="lesson-xp">+0 XP</span>
+            </div>
+        </div>
+
+        <div class="lesson-body">
+            <div class="lesson-pane">
+                <div class="card">
+                    <h2>📖 Story</h2>
+                    <div id="lesson-story"></div>
+                </div>
+
+                <div class="card teaching-card">
+                    <h2>📚 Concept Teaching</h2>
+                    <div id="lesson-teaching"></div>
+                </div>
+
+                <div class="card">
+                    <h2>🎯 Objective</h2>
+                    <div id="lesson-objective"></div>
+                </div>
+
+                <div class="card">
+                    <h2>🧠 What You Learned</h2>
+                    <div id="lesson-concepts"></div>
+                </div>
+
+                <div class="card task-card" id="task-card-container">
+                    <span class="task-badge">YOUR TURN</span>
+                    <div class="task-title">🎯 Task for You</div>
+                    <div id="lesson-task"></div>
+                </div>
+
+                <div class="card hint-card" id="hint-card" hidden>
+                    <h2>💡 Hint</h2>
+                    <div id="lesson-hint"></div>
+                </div>
+            </div>
+
+            <div class="code-pane">
+                <div class="card code-card">
+                    <div class="code-header">
+                        <span>🐍 main.py</span>
+                        <div class="code-actions">
+                            <button id="hint-btn" class="btn-small" type="button">💡 Hint</button>
+                            <button id="reset-code-btn" class="btn-small" type="button">↺ Clear</button>
+                        </div>
+                    </div>
+
+                    <textarea id="code-editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" aria-label="Python code editor"></textarea>
+
+                    <div class="run-bar">
+                        <button id="run-btn" class="btn-primary" type="button">▶ Run Code</button>
+                        <button id="submit-btn" class="btn-success" type="button">✓ Submit</button>
+                    </div>
+                </div>
+
+                <div class="card output-card">
+                    <div class="output-header">
+                        <span>🖥️ Output</span>
+                        <button id="clear-output-btn" class="btn-small" type="button">Clear</button>
+                    </div>
+                    <pre id="output"></pre>
+                    <div class="output-meta" id="output-meta">Ready.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="victory-screen" hidden>
+        <div class="victory-content">
+            <div class="victory-emoji">🏆</div>
+            <h1>Quest Complete!</h1>
+            <p id="victory-text"></p>
+            <button id="next-lesson-btn" class="btn-primary" type="button">
+                Next Lesson →
+            </button>
+        </div>
+    </section>
+</main>
+
+<div id="achievement-toast" class="toast" hidden>
+    <span id="toast-icon">🏆</span>
+    <div>
+        <div class="toast-title" id="toast-title">Achievement Unlocked!</div>
+        <div class="toast-desc" id="toast-desc"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+
+<script>
+const LESSONS = [
+{
+    id:1,
+    chapter:"CHAPTER 1",
+    title:"What Is Programming?",
+    game:"🎮 Mission 01 — Enter the Coder Zone",
+    xp:0,
+    noTask:true,
+    story:`<p>Before you learn Python, you need to understand the bigger idea behind every app, game and website: <b>programming</b>.</p><p>Think of a computer as a very fast machine that follows instructions. Your job as a programmer is to give it those instructions clearly.</p>`,
+    teaching:`<p><b>Programming</b> is the process of writing instructions that tell a computer what to do.</p><p>Those instructions are written using a <b>programming language</b>, such as Python, JavaScript, C++ or Java.</p><p>A program can take input, process information, make decisions and produce an output. Games, websites, apps and tools you use every day are built from programs.</p><p>The important skill is not memorizing every command, but learning how to break a problem into smaller steps and turn those steps into code.</p>`,
+    objective:`Understand what programming is and why programming languages are used.`,
+    concepts:`<ul><li><b>Programming</b> means writing instructions for a computer.</li><li><b>Program</b> is a set of instructions that performs a task.</li><li><b>Programming Language</b> is a language used to write those instructions.</li><li><b>Algorithm</b> is a step-by-step method for solving a problem.</li></ul>`,
+    task:``,
+    starter:"",
+    expected:null,
+    hint:``,
+    achievement:null
+},
+{
+    id:2,
+    chapter:"CHAPTER 2",
+    title:"What Is Python?",
+    game:"🎮 Mission 02 — Meet Python",
+    xp:0,
+    noTask:true,
+    story:`<p>You've entered the coding world. Now it's time to meet the language you'll use throughout this quest: <b>Python</b>.</p><p>Python is designed to be readable, practical and beginner-friendly, but it is also powerful enough for professional software development.</p>`,
+    teaching:`<p><b>Python</b> is a high-level, general-purpose programming language known for its readable syntax.</p><p>Python was created by <b>Guido van Rossum</b>. He started working on Python in <b>December 1989</b>, and Python was first released publicly in <b>1991</b>.</p><p>Python is used for many things, including automation, web development, data science, artificial intelligence, scripting and software development.</p><p>One reason Python is popular with beginners is that its syntax is clean and readable.</p>`,
+    objective:`Learn what Python is, who created it, when it was started, and where it is commonly used.`,
+    concepts:`<ul><li><b>Creator:</b> Guido van Rossum.</li><li><b>Started:</b> December 1989.</li><li><b>First public release:</b> 1991.</li><li><b>Type:</b> High-level, general-purpose programming language.</li><li><b>Uses:</b> Automation, web development, AI, data science, scripting and more.</li></ul>`,
+    task:``,
+    starter:"",
+    expected:null,
+    hint:``,
+    achievement:null
+},
+{
+    id:3,
+    chapter:"CHAPTER 3",
+    title:"Python print() Function",
+    game:"🎮 The Welcome Scroll",
+    xp:50,
+    story:`<p>Welcome, brave coder! Your Python journey begins inside the Python Kingdom.</p><p>The first spell every Python adventurer learns is the <b>print()</b> function.</p>`,
+    teaching:`<p>The <b>print()</b> function is used to display information on the screen.</p><p>You can put text inside quotation marks and Python will display it.</p><p>For example, <code>print("Hello")</code> tells Python to display the word Hello.</p><p>Python executes your instructions from top to bottom.</p>`,
+    objective:`Learn how to use the <code>print()</code> function to display text.`,
+    concepts:`<ul><li><b>print() Function</b> displays information.</li><li><b>Strings</b> are pieces of text written inside quotes.</li><li><b>Program Execution</b> normally happens from top to bottom.</li></ul>`,
+    task:`<p>Write Python code that displays:</p><p><code>Hello, World!</code></p><p>Write the code yourself in the compiler and press <b>Run Code</b>.</p>`,
+    starter:"",
+    expected:(out,code)=>{
+        return /print\s*\(/.test(code) && out.some(x=>x.toLowerCase().includes("hello, world"));
+    },
+    hint:`Use the <code>print()</code> function and put the required text inside quotation marks.`,
+    achievement:"First Spell Cast!"
+},
+{
+    id:4,
+    chapter:"CHAPTER 4",
+    title:"Python Variables",
+    game:"🎮 The Number Crystal",
+    xp:75,
+    story:`<p>You discover a magical crystal containing a secret number.</p><p>To store the number, Python gives you a powerful tool called a <b>variable</b>.</p>`,
+    teaching:`<p>A <b>variable</b> is a name that stores a value.</p><p>You create a variable using the assignment operator <code>=</code>.</p><p>For example, <code>age = 14</code> stores the number 14 inside the variable named age.</p><p>A variable can later be used by writing its name.</p>`,
+    objective:`Create a variable named <code>secret</code> containing the value <code>7</code>, then display it.`,
+    concepts:`<ul><li><b>Variables</b> store values.</li><li><b>Assignment Operator (=)</b> places a value into a variable.</li><li><b>Variable Names</b> identify stored values.</li></ul>`,
+    task:`<p>Create a variable called <code>secret</code> and give it the value <code>7</code>.</p><p>Then use <code>print()</code> to display the value.</p>`,
+    starter:"",
+    expected:(out,code)=>{
+        return /secret\s*=\s*7/.test(code) && out.some(x=>x.trim()==="7");
+    },
+    hint:`Create <code>secret</code> first and then print the variable.`
+},
+{
+    id:5,
+    chapter:"CHAPTER 5",
+    title:"Python input() Function",
+    game:"🎮 The Talking Door",
+    xp:90,
+    story:`<p>A magical door blocks your path.</p><p>The door wants to know your name before it opens.</p>`,
+    teaching:`<p>The <b>input()</b> function allows a Python program to receive information from the user.</p><p>When Python reaches <code>input()</code>, it waits for the user to type something.</p><p>The information received from <code>input()</code> is stored as text, also called a string.</p><p>You can save the result in a variable such as <code>name</code>.</p>`,
+    objective:`Ask the user for their name and greet them.`,
+    concepts:`<ul><li><b>input() Function</b> receives information from the user.</li><li><b>User Input</b> is normally returned as a string.</li><li><b>String Concatenation</b> can combine pieces of text.</li></ul>`,
+    task:`<p>Ask the user:</p><p><code>What is your name?</code></p><p>Then display a greeting containing the name.</p><p>Example result: <code>Hello, Alex!</code></p>`,
+    starter:"",
+    expected:(out,code)=>{
+        return /input\s*\(/.test(code) && /print\s*\(/.test(code) && /name/i.test(code);
+    },
+    hint:`Store the result of <code>input()</code> in a variable and use that variable when printing the greeting.`
+},
+{
+    id:6,
+    chapter:"CHAPTER 6",
+    title:"Python if Statement",
+    game:"🎮 The Wise Wizard's Choice",
+    xp:100,
+    story:`<p>A wizard gives you two paths.</p><p>Your program must decide which path to take.</p>`,
+    teaching:`<p>The <b>if statement</b> allows Python to make decisions.</p><p>Python checks whether a condition is true.</p><p>If the condition is true, Python executes the indented code below it.</p><p>Python uses <code>==</code> to compare two values.</p>`,
+    objective:`Create a choice and use an <code>if</code> statement to make a decision.`,
+    concepts:`<ul><li><b>if Statement</b> checks a condition.</li><li><b>Conditions</b> can evaluate to True or False.</li><li><b>Comparison Operator (==)</b> checks whether two values are equal.</li><li><b>Indentation</b> determines which code belongs to the if statement.</li></ul>`,
+    task:`<p>Create:</p><p><code>choice = "left"</code></p><p>If the choice is <code>"left"</code>, print <code>Treasure!</code>.</p>`,
+    starter:"",
+    expected:(out,code)=>{
+        return /if\s+/.test(code) && /choice\s*=\s*["']left["']/.test(code) && out.some(x=>x.includes("Treasure"));
+    },
+    hint:`Store <code>"left"</code> in <code>choice</code>, then compare it using <code>==</code>.`
+},
+{
+    id:7,
+    chapter:"CHAPTER 7",
+    title:"Python for Loop",
+    game:"🎮 The Looping River",
+    xp:110,
+    story:`<p>You reach a river with five stepping stones.</p><p>Instead of writing the same instruction five times, you can use a loop.</p>`,
+    teaching:`<p>A <b>for loop</b> repeats a block of code.</p><p>The <code>range()</code> function can generate a sequence of numbers.</p><p>For example, <code>range(1, 6)</code> produces the numbers 1 through 5.</p><p>The code inside the loop must be indented.</p>`,
+    objective:`Use a <code>for</code> loop to display the numbers 1 through 5.`,
+    concepts:`<ul><li><b>for Loop</b> repeats instructions.</li><li><b>range()</b> creates a sequence of numbers.</li><li><b>Loop Body</b> contains the instructions that repeat.</li><li><b>Indentation</b> defines the loop body.</li></ul>`,
+    task:`<p>Use a <code>for</code> loop to print:</p><p><code>1</code></p><p><code>2</code></p><p><code>3</code></p><p><code>4</code></p><p><code>5</code></p>`,
+    starter:"",
+    expected:(out,code)=>{
+        const lines=out.map(x=>x.trim());
+        return /for\s+/.test(code) && /range\s*\(/.test(code) && ["1","2","3","4","5"].every(x=>lines.includes(x));
+    },
+    hint:`Use <code>range(1, 6)</code> and print the loop variable.`
+},
+{
+    id:8,
+    chapter:"CHAPTER 8",
+    title:"Python random Module",
+    game:"🎮 The Dragon Dice",
+    xp:120,
+    story:`<p>A dragon guards a magical six-sided dice.</p><p>To roll it, you need Python's <b>random</b> module.</p>`,
+    teaching:`<p>Python contains many useful <b>modules</b>.</p><p>The <b>random module</b> provides tools for generating random values.</p><p>You can load it with <code>import random</code>.</p><p>The function <code>random.randint(1, 6)</code> produces a random integer from 1 through 6.</p>`,
+    objective:`Import the random module and generate a random number between 1 and 6.`,
+    concepts:`<ul><li><b>Modules</b> provide additional Python functionality.</li><li><b>import Statement</b> loads a module.</li><li><b>random.randint()</b> generates a random integer in a range.</li></ul>`,
+    task:`<p>Import the <code>random</code> module.</p><p>Generate a random integer from <code>1</code> to <code>6</code>.</p><p>Print the generated number.</p>`,
+    starter:"",
+    expected:(out,code)=>{
+        return /import\s+random/.test(code) && /random\.randint\s*\(\s*1\s*,\s*6\s*\)/.test(code) && out.some(x=>/^[1-6]$/.test(x.trim()));
+    },
+    hint:`First import <code>random</code>, then use <code>random.randint(1, 6)</code>.`
+},
+{
+    id:9,
+    chapter:"CHAPTER 9",
+    title:"Python Lists",
+    game:"🎮 The Treasure Inventory",
+    xp:130,
+    story:`<p>You discover a treasure chest filled with different items.</p><p>You need a container capable of storing multiple values together.</p>`,
+    teaching:`<p>A <b>list</b> stores multiple values in a single variable.</p><p>Lists are written using square brackets <code>[]</code>.</p><p>Items are separated using commas.</p><p>You can access an item using its index. Python starts counting indexes from <code>0</code>.</p><p>You can add an item using the <code>append()</code> method.</p>`,
+    objective:`Create a list containing at least three treasures and display the list.`,
+    concepts:`<ul><li><b>Lists</b> store multiple values.</li><li><b>List Items</b> are separated using commas.</li><li><b>List Index</b> identifies an item's position.</li><li><b>append()</b> adds a new item to a list.</li></ul>`,
+    task:`<p>Create a list named <code>inventory</code>.</p><p>Add at least three items such as a sword, shield and potion.</p><p>Print the list.</p>`,
+    starter:"",
+    expected:(out,code)=>{
+        const match=code.match(/inventory\s*=\s*\[([^\]]+)\]/);
+        if(!match) return false;
+        const items=match[1].split(",");
+        return items.length>=3 && /print\s*\(\s*inventory/.test(code);
+    },
+    hint:`Create a list using square brackets and place at least three values inside it.`
+},
+{
+    id:10,
+    chapter:"CHAPTER 10",
+    title:"Python while Loop",
+    game:"🎮 The Final Boss",
+    xp:200,
+    story:`<p>🏆 BOSS BATTLE!</p><p>The dragon has hidden a secret number between 1 and 10.</p><p>You must combine variables, input, conditions, loops and random numbers.</p>`,
+    teaching:`<p>A <b>while loop</b> repeatedly executes code while its condition remains true.</p><p><code>while True:</code> creates a loop that continues until something stops it.</p><p>The <b>break statement</b> immediately exits the loop.</p><p>The <b>int()</b> function converts text into an integer.</p>`,
+    objective:`Build a number guessing game using random numbers, input, conditions and a while loop.`,
+    concepts:`<ul><li><b>while Loop</b> repeats code while a condition is true.</li><li><b>while True</b> creates a continuously running loop.</li><li><b>break Statement</b> exits a loop.</li><li><b>int()</b> converts a string into an integer.</li></ul>`,
+    task:`<p>Create a number guessing game that chooses a random number 1-10, takes inputs, checks high/low, and breaks on <code>You win!</code>.</p>`,
+    starter:"",
+    expected:(out,code)=>{
+        return /import\s+random/.test(code) && /randint\s*\(/.test(code) && /while\s+/.test(code) && /input\s*\(/.test(code) && /break/.test(code);
+    },
+    hint:`Use <code>random.randint()</code> for the secret number, <code>input()</code> for guesses, and a <code>while</code> loop with <code>break</code> when correct.`,
+    achievement:"Final Boss Defeated!"
+},
+{
+    id:11,
+    chapter:"CHAPTER 11",
+    title:"Python Functions",
+    game:"🎮 The Spellbook",
+    xp:150,
+    story:`<p>You find an ancient <b>spellbook</b> filled with reusable magic spells.</p><p>Each spell can be cast again and again without rewriting it.</p>`,
+    teaching:`<p>A <b>function</b> is a reusable block of code that performs a specific task.</p><p>You define a function using the <code>def</code> keyword.</p><p>For example, <code>def greet():</code> creates a function named greet.</p><p>The instructions inside the function must be indented.</p>`,
+    objective:`Create a function and call it to display a message.`,
+    concepts:`<ul><li><b>Functions</b> are reusable blocks of code.</li><li><b>def Keyword</b> defines a function.</li><li><b>Function Call</b> runs the function.</li></ul>`,
+    task:`<p>Create a function called <code>cast_spell</code> that prints <code>✨ Magic! ✨</code>.</p><p>Then call the function so the message appears.</p>`,
+    starter:"",
+    expected:(out,code)=>{
+        return /def\s+cast_spell\s*\(/.test(code) && /cast_spell\s*\(\s*\)/.test(code) && out.some(x=>x.includes("Magic"));
+    },
+    hint:`Define the function with <code>def</code> and call it by writing its name followed by parentheses.`
+},
+{
+    id:12,
+    chapter:"CHAPTER 12",
+    title:"Python Function Parameters",
+    game:"🎮 The Wizard's Quiz",
+    xp:160,
+    story:`<p>A wizard challenges you to a magical quiz.</p><p>Each spell needs information passed into the function.</p>`,
+    teaching:`<p>Functions can accept <b>parameters</b> — values passed into the function.</p><p>For example, <code>def greet(name):</code> accepts a parameter named <code>name</code>.</p><p>When called, you supply a value inside parentheses.</p>`,
+    objective:`Create a function that accepts a parameter and uses it.`,
+    concepts:`<ul><li><b>Parameters</b> are variables that receive values.</li><li><b>Arguments</b> are the values passed.</li></ul>`,
+    task:`<p>Create a function called <code>double</code> that accepts a number and prints the number multiplied by 2. Call it with <code>5</code>.</p>`,
+    starter:"",
+    expected:(out,code)=>{
+        return /def\s+double\s*\(/.test(code) && /double\s*\(\s*5\s*\)/.test(code) && out.some(x=>x.trim()==="10");
+    },
+    hint:`Define a parameter inside parentheses and multiply it by 2 inside the function.`
+},
+{
+    id:13,
+    chapter:"CHAPTER 13",
+    title:"Python Dictionaries",
+    game:"🎮 The Character Creator",
+    xp:170,
+    story:`<p>You arrive at the <b>Character Creator</b> shrine.</p><p>Store information about your hero using key-value pairs.</p>`,
+    teaching:`<p>A <b>dictionary</b> stores data in <b>key-value pairs</b> using curly braces <code>{}</code>.</p><p>Access values with <code>hero["name"]</code>.</p>`,
+    objective:`Create a dictionary that stores character information.`,
+    concepts:`<ul><li><b>Dictionaries</b> store key-value pairs.</li><li><b>Keys</b> identify values inside a dictionary.</li></ul>`,
+    task:`<p>Create a dictionary called <code>hero</code> with <code>"name"</code> and <code>"health": 100</code>. Print <code>hero["name"]</code>.</p>`,
+    starter:"",
+    expected:(out,code)=>{
+        const match=code.match(/hero\s*=\s*\{([^}]+)\}/);
+        if(!match) return false;
+        const body=match[1];
+        return /["']name["']\s*:/.test(body) && /["']health["']\s*:\s*100/.test(body) && /print\s*\(\s*hero\s*\[\s*["']name["']\s*\]\s*\)/.test(code) && out.length>0;
+    },
+    hint:`Use curly braces to create the dictionary and square brackets to print a value by its key.`
+},
+{
+    id:14,
+    chapter:"CHAPTER 14",
+    title:"Python for...in over Strings",
+    game:"🎮 The Rune Decoder",
+    xp:180,
+    story:`<p>Decode ancient runes one letter at a time using string iteration.</p>`,
+    teaching:`<p>A <b>string</b> is a sequence of characters.</p><p>You can use a <code>for</code> loop to visit each character in sequence.</p>`,
+    objective:`Loop through a string and print each character.`,
+    concepts:`<ul><li><b>String Iteration</b> visits each character.</li><li><b>for Loop</b> iterates over strings and lists.</li></ul>`,
+    task:`<p>Create <code>word = "PYTHON"</code> and use a <code>for</code> loop to print each character on its own line.</p>`,
+    starter:"",
+    expected:(out,code)=>{
+        const lines=out.map(x=>x.trim());
+        return /word\s*=\s*["']PYTHON["']/.test(code) && /for\s+\w+\s+in\s+/.test(code) && ["P","Y","T","H","O","N"].every(l=>lines.includes(l));
+    },
+    hint:`Use a <code>for</code> loop with variable <code>word</code> and print each letter.`
+},
+{
+    id:15,
+    chapter:"CHAPTER 15",
+    title:"Python try / except",
+    game:"🎮 The Trap Detector",
+    xp:190,
+    story:`<p>The dungeon is full of magical traps. Handle errors safely!</p>`,
+    teaching:`<p>The <b>try / except</b> block lets your program handle runtime errors gracefully without crashing.</p>`,
+    objective:`Use a <code>try</code> and <code>except</code> block to handle an error.`,
+    concepts:`<ul><li><b>try Block</b> holds risky code.</li><li><b>except Block</b> catches errors.</li></ul>`,
+    task:`<p>Inside a <code>try</code> block, run <code>int("abc")</code>. Inside <code>except</code>, print <code>Error caught!</code>.</p>`,
+    starter:"",
+    expected:(out,code)=>{
+        return /try\s*:/.test(code) && /except/.test(code) && /int\s*\(\s*["']abc["']\s*\)/.test(code) && out.some(x=>x.includes("Error caught"));
+    },
+    hint:`Place the conversion in <code>try</code> and print your message inside <code>except</code>.`
+},
+{
+    id:16,
+    chapter:"CHAPTER 16",
+    title:"Python List Comprehensions",
+    game:"🎮 The Magic Forge",
+    xp:200,
+    story:`<p>Create powerful item lists in a single clean expression!</p>`,
+    teaching:`<p>A <b>list comprehension</b> creates a new list concisely: <code>[x*2 for x in range(5)]</code>.</p>`,
+    objective:`Use a list comprehension to calculate squares of numbers.`,
+    concepts:`<ul><li><b>List Comprehensions</b> create lists in one line.</li></ul>`,
+    task:`<p>Create a list called <code>powers</code> with squares of numbers 1-5 using comprehension. Print it.</p>`,
+    starter:"",
+    expected:(out,code)=>{
+        return /powers\s*=\s*\[.*for\s+\w+\s+in\s+range/.test(code) && /print\s*\(\s*powers\s*\)/.test(code) && out.some(x=>x.includes("1")&&x.includes("4")&&x.includes("9")&&x.includes("16")&&x.includes("25"));
+    },
+    hint:`Use <code>[x*x for x in range(1, 6)]</code>.`
+},
+{
+    id:17,
+    chapter:"CHAPTER 17",
+    title:"Python Classes & Objects",
+    game:"🎮 The Monster Trainer",
+    xp:220,
+    story:`<p>Learn to create custom object blueprints with <b>classes</b>.</p>`,
+    teaching:`<p>A <b>class</b> is a blueprint for creating objects. The <code>__init__</code> method initializes data attributes.</p>`,
+    objective:`Define a class and instantiate an object from it.`,
+    concepts:`<ul><li><b>Classes</b> are blueprints.</li><li><b>Objects</b> are instances.</li><li><b>__init__</b> is constructor.</li></ul>`,
+    task:`<p>Create class <code>Player</code> with attribute <code>name</code> in <code>__init__</code>. Instantiate with <code>"Hero"</code> and print the name.</p>`,
+    starter:"",
+    expected:(out,code)=>{
+        return /class\s+Player\s*:/.test(code) && /def\s+__init__\s*\(/.test(code) && /self\.name\s*=/.test(code) && /Player\s*\(/.test(code) && out.some(x=>x.includes("Hero"));
+    },
+    hint:`Define <code>class Player:</code>, write <code>__init__</code>, and instantiate with <code>Player("Hero")</code>.`,
+    achievement:"Object Master!"
+},
+{
+    id:18,
+    chapter:"CHAPTER 18",
+    title:"Final Quest: The RPG Battle",
+    game:"🏆 THE ULTIMATE GAME BUILDER",
+    xp:500,
+    story:`<p>🌟 The Grand Finale! Build a complete text battle system combining everything you have mastered.</p>`,
+    teaching:`<p>Bring classes, loops, conditionals, and random calculations together into a complete mini-game.</p>`,
+    objective:`Build a full battle simulation.`,
+    concepts:`<ul><li><b>Object-Oriented Programming</b></li><li><b>Game Loops</b></li><li><b>Full Python Mastery</b></li></ul>`,
+    task:`<p>Build a program with <code>import random</code>, a <code>class</code>, a <code>while</code> battle loop, <code>random.randint()</code>, and <code>print()</code> statements.</p>`,
+    starter:"",
+    expected:(out,code)=>{
+        return /import\s+random/.test(code) && /class\s+\w+\s*:/.test(code) && /while\s+/.test(code) && /random\.randint\s*\(/.test(code) && /print\s*\(/.test(code);
+    },
+    hint:`Combine a Player class, while loop, damage calculations, and game output.`,
+    achievement:"🐉 Python Hero! Ultimate Quest Complete!"
+}
+];
+
+const ACHIEVEMENTS={
+    "First Spell Cast!":"🌟 You successfully completed your first Python task!",
+    "Final Boss Defeated!":"🐉 You defeated the Python Quest Final Boss!",
+    "Object Master!":"🧙 You learned how to create classes and objects in Python!",
+    "🐉 Python Hero! Ultimate Quest Complete!":"👑 You have completed the entire Python Quest! You are a true Python Hero!"
+};
+
+const STORAGE_KEY="python-quest-save-v9";
+
+const STATE={
+    pyodide:null,
+    currentLesson:0,
+    maxUnlocked:2,
+    xp:0,
+    level:1,
+    hearts:5,
+    coins:0,
+    completed:new Set([0, 1]),
+    hintsUsed:0,
+    running:false
+};
+
+let pyReady=false;
+let toastTimer=null;
+
+const $=id=>document.getElementById(id);
+
+function setPyStatus(text,ready=false){
+    const el=$("py-status");
+    el.textContent=text;
+    el.classList.toggle("ready",ready);
+
+    if(ready){
+        setTimeout(()=>{
+            el.style.opacity="0";
+            setTimeout(()=>{
+                el.style.display="none";
+            },350);
+        },2200);
+    }
+}
+
+function toggleSidebar(forceClose=false){
+    const sidebar=$("sidebar");
+    const backdrop=$("sidebar-backdrop");
+    const isOpen=sidebar.classList.contains("open");
+
+    if(forceClose || isOpen){
+        sidebar.classList.remove("open");
+        backdrop.classList.remove("open");
+    }else{
+        sidebar.classList.add("open");
+        backdrop.classList.add("open");
+    }
+}
+
+function saveState(){
+    const data={
+        xp:STATE.xp,
+        level:STATE.level,
+        hearts:STATE.hearts,
+        coins:STATE.coins,
+        completed:[...STATE.completed],
+        currentLesson:STATE.currentLesson,
+        maxUnlocked:STATE.maxUnlocked
+    };
+
+    try{
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }catch(e){}
+}
+
+function loadState(){
+    try{
+        const raw=localStorage.getItem(STORAGE_KEY);
+        if(!raw){
+            STATE.completed = new Set([0, 1]);
+            STATE.maxUnlocked = 2;
+            return;
+        }
+
+        const d=JSON.parse(raw);
+        STATE.xp=Number.isFinite(d.xp) ? Math.max(0,d.xp) : 0;
+        STATE.level=Number.isFinite(d.level) ? Math.max(1,d.level) : 1;
+        STATE.hearts=Number.isFinite(d.hearts) ? Math.max(0,Math.min(5,d.hearts)) : 5;
+        STATE.coins=Number.isFinite(d.coins) ? Math.max(0,d.coins) : 0;
+
+        const loadedCompleted = Array.isArray(d.completed) ? d.completed.filter(Number.isInteger) : [];
+        STATE.completed = new Set([...loadedCompleted, 0, 1]);
+
+        STATE.currentLesson = Number.isInteger(d.currentLesson)
+            ? Math.max(0, Math.min(LESSONS.length-1, d.currentLesson))
+            : 0;
+
+        STATE.maxUnlocked = Number.isInteger(d.maxUnlocked)
+            ? Math.max(2, Math.min(LESSONS.length-1, d.maxUnlocked))
+            : 2;
+
+    }catch(e){
+        STATE.completed = new Set([0, 1]);
+        STATE.maxUnlocked = 2;
+    }
+}
+
+function isUnlocked(index){
+    return index>=0 && index<=STATE.maxUnlocked;
+}
+
+function updateStats(){
+    const needed=STATE.level*100;
+    $("stat-level").textContent=STATE.level;
+    $("stat-xp").textContent=`${STATE.xp} / ${needed} XP`;
+    $("stat-hearts").textContent=STATE.hearts;
+    $("stat-coins").textContent=STATE.coins;
+    $("xp-fill").style.width=`${Math.min(100, STATE.xp/needed*100)}%`;
+}
+
+function renderSidebar(){
+    const list=$("lesson-list");
+    list.replaceChildren();
+
+    LESSONS.forEach((lesson,index)=>{
+        const li=document.createElement("li");
+        const completed=STATE.completed.has(index);
+        const unlocked=isUnlocked(index);
+
+        li.className=[
+            completed?"completed":"",
+            !unlocked?"locked":"",
+            index===STATE.currentLesson?"active":""
+        ].filter(Boolean).join(" ");
+
+        const number=document.createElement("span");
+        number.className="lvl-num";
+        number.textContent=index+1;
+
+        const title=document.createElement("span");
+        title.textContent=lesson.title;
+
+        li.append(number,title);
+
+        if(unlocked){
+            li.tabIndex=0;
+            const select=()=>{
+                loadLesson(index);
+                toggleSidebar(true);
+            };
+
+            li.addEventListener("click", select);
+            li.addEventListener("keydown", e=>{
+                if(e.key==="Enter" || e.key===" "){
+                    e.preventDefault();
+                    select();
+                }
+            });
+        }else{
+            li.title="Complete previous lessons first.";
+        }
+
+        list.appendChild(li);
+    });
+}
+
+function loadLesson(index){
+    if(!LESSONS[index]) return;
+    if(!isUnlocked(index)){
+        showToast("🔒", "Lesson Locked", "Complete the previous lesson first.");
+        return;
+    }
+
+    STATE.currentLesson=index;
+    const lesson=LESSONS[index];
+
+    $("lesson-tag").textContent=lesson.chapter;
+    $("lesson-title").textContent=lesson.title;
+    $("lesson-game").textContent=lesson.game;
+    $("lesson-xp").textContent=`+${lesson.xp} XP`;
+    $("lesson-story").innerHTML=lesson.story;
+    $("lesson-teaching").innerHTML=lesson.teaching;
+    $("lesson-objective").innerHTML=lesson.objective;
+    $("lesson-concepts").innerHTML=lesson.concepts;
+
+    const taskContainer = $("task-card-container");
+    const hintBtn = $("hint-btn");
+
+    if(lesson.noTask){
+        taskContainer.hidden = true;
+        hintBtn.hidden = true;
+    }else{
+        taskContainer.hidden = false;
+        hintBtn.hidden = false;
+        $("lesson-task").innerHTML = lesson.task;
+        $("lesson-hint").innerHTML = lesson.hint;
+    }
+
+    // Clean empty coding workspace on every lesson
+    $("code-editor").value = "";
+
+    $("hint-card").hidden=true;
+    $("victory-screen").hidden=true;
+
+    clearOutput();
+    renderSidebar();
+    saveState();
+    
+    $("lesson-view").scrollTop = 0;
+}
+
+function clearOutput(){
+    $("output").textContent="";
+    $("output").classList.remove("err");
+    $("output-meta").textContent="Ready.";
+}
+
+function appendOutput(text,error=false){
+    const output=$("output");
+    output.classList.toggle("err", error);
+    output.textContent+=String(text);
+    output.scrollTop=output.scrollHeight;
+}
+
+function setBusy(busy){
+    STATE.running=busy;
+    $("run-btn").disabled=busy;
+    $("submit-btn").disabled=busy;
+    $("run-btn").textContent=busy?"⏳ Running...":"▶ Run Code";
+    $("submit-btn").textContent=busy?"⏳ Checking...":"✓ Submit";
+}
+
+function showHint(){
+    STATE.hintsUsed++;
+    if(STATE.hintsUsed>2){
+        STATE.hearts=Math.max(0, STATE.hearts-1);
+        updateStats();
+        saveState();
+        showToast("💔", "Hint Cost", "Using more than two hints costs one heart.");
+    }
+    $("hint-card").hidden=false;
+    $("hint-card").scrollIntoView({ behavior:"smooth", block:"nearest" });
+}
+
+function resetCode(){
+    $("code-editor").value = "";
+    clearOutput();
+}
+
+function formatPythonError(error){
+    let message=error?.message || String(error);
+    message=message.replace(/^PythonError:\s*/i,"");
+    return message.trim();
+}
+
+async function executePython(code){
+    if(!pyReady || !STATE.pyodide){
+        throw new Error("Python interpreter is not ready yet.");
+    }
+    if(!code.trim()) return "";
+
+    // Automatically load packages over internet via micropip/pyodide
+    try{
+        await STATE.pyodide.loadPackagesFromImports(code);
+    }catch(err){
+        console.warn("Auto package load notice:", err);
+    }
+
+    STATE.pyodide.runPython("_quest_capture.clear()");
+    await STATE.pyodide.runPythonAsync(code);
+    return STATE.pyodide.runPython("_quest_capture.get()");
+}
+
+async function runCode(){
+    if(!pyReady){
+        clearOutput();
+        appendOutput("⏳ Python interpreter is still loading. Please wait a moment...\n");
+        return;
+    }
+
+    const code=$("code-editor").value;
+    clearOutput();
+
+    if(!code.trim()){
+        appendOutput("⚠️ Write or type your Python solution first.\n", true);
+        return;
+    }
+
+    setBusy(true);
+    $("output-meta").textContent="Running Python...";
+
+    try{
+        const result=await executePython(code);
+        appendOutput(result || "(no output)\n");
+        $("output-meta").textContent="Execution finished.";
+    }catch(error){
+        appendOutput(`❌ ${formatPythonError(error)}\n`, true);
+        $("output-meta").textContent="Execution failed.";
+    }finally{
+        setBusy(false);
+    }
+}
+
+async function submitCode(){
+    if(!pyReady){
+        clearOutput();
+        appendOutput("⏳ Python interpreter is still loading. Please wait a moment...\n");
+        return;
+    }
+
+    const lesson=LESSONS[STATE.currentLesson];
+    const code=$("code-editor").value;
+
+    if(lesson.noTask){
+        clearOutput();
+        if(code.trim()){
+            try{
+                const result = await executePython(code);
+                appendOutput(result || "(no output)\n");
+            }catch(error){
+                appendOutput(`❌ ${formatPythonError(error)}\n`, true);
+            }
+        }
+        appendOutput("\n📖 Foundation Chapter confirmed! Moving ahead.\n");
+        completeLesson(lesson);
+        return;
+    }
+
+    if(!code.trim()){
+        clearOutput();
+        appendOutput("⚠️ Write your solution before submitting.\n", true);
+        return;
+    }
+
+    setBusy(true);
+    clearOutput();
+    $("output-meta").textContent="Checking your task...";
+
+    let passed=false;
+
+    try{
+        const result=await executePython(code);
+        appendOutput(result || "(no output)\n");
+        const lines=result?result.split(/\r?\n/).filter(Boolean):[];
+        passed=Boolean(lesson.expected(lines, code));
+    }catch(error){
+        appendOutput(`❌ ${formatPythonError(error)}\n`, true);
+        passed=false;
+    }finally{
+        setBusy(false);
+    }
+
+    if(passed){
+        $("output-meta").textContent="✅ Task completed!";
+        completeLesson(lesson);
+    }else{
+        STATE.hearts=Math.max(0, STATE.hearts-1);
+        updateStats();
+        saveState();
+
+        appendOutput("\n💔 Task not completed yet. Read the teaching notes and try again.\n", true);
+        $("output-meta").textContent="Keep trying.";
+
+        if(STATE.hearts===0){
+            showToast("❤️", "Out of Hearts", "You can reset your progress and try the quest again.");
+        }
+    }
+}
+
+function completeLesson(lesson){
+    const index=STATE.currentLesson;
+    if(STATE.completed.has(index)){
+        showToast("✅", "Already Complete", "This lesson has already been completed.");
+        return;
+    }
+
+    STATE.completed.add(index);
+    STATE.xp+=lesson.xp;
+    STATE.coins+=10;
+
+    let levelUp=false;
+    while(STATE.xp>=STATE.level*100){
+        STATE.xp-=STATE.level*100;
+        STATE.level++;
+        levelUp=true;
+    }
+
+    STATE.hearts=Math.min(5, STATE.hearts+1);
+    updateStats();
+    saveState();
+
+    if(levelUp){
+        showToast("🎉", "Level Up!", `You reached Level ${STATE.level}!`);
+    }
+
+    if(lesson.achievement){
+        showToast("🏆", "Achievement Unlocked!", ACHIEVEMENTS[lesson.achievement] || lesson.achievement);
+    }
+
+    const finalLesson=index===LESSONS.length-1;
+    $("victory-text").innerHTML=finalLesson
+        ? `You earned <b>+${lesson.xp} XP</b>, <b>+10 🪙</b> and defeated the Python Quest!`
+        : `You earned <b>+${lesson.xp} XP</b>, <b>+10 🪙</b> and <b>+1 ❤️</b>.`;
+
+    $("next-lesson-btn").textContent=finalLesson?"Finish Quest 🏆":"Next Lesson →";
+    $("victory-screen").hidden=false;
+}
+
+function nextLesson(){
+    $("victory-screen").hidden=true;
+    if(STATE.currentLesson<LESSONS.length-1){
+        const next=STATE.currentLesson+1;
+        STATE.maxUnlocked=Math.max(STATE.maxUnlocked, next);
+        saveState();
+        loadLesson(next);
+    }else{
+        showToast("🐍", "Python Hero!", "You completed every Python Quest lesson!");
+    }
+}
+
+function showToast(icon, title, description){
+    $("toast-icon").textContent=icon;
+    $("toast-title").textContent=title;
+    $("toast-desc").textContent=description;
+    const toast=$("achievement-toast");
+    toast.hidden=false;
+
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer=setTimeout(()=>{
+        toast.hidden=true;
+    },4200);
+}
+
+function resetProgress(){
+    if(!confirm("Reset all Python Quest progress?")) return;
+    try{
+        localStorage.removeItem(STORAGE_KEY);
+    }catch(e){}
+    location.reload();
+}
+
+async function initPyodide(){
+    loadState();
+    renderSidebar();
+    updateStats();
+
+    if(STATE.currentLesson>STATE.maxUnlocked){
+        STATE.currentLesson=STATE.maxUnlocked;
+    }
+    loadLesson(STATE.currentLesson);
+
+    if(typeof loadPyodide!=="function"){
+        setPyStatus("❌ Python engine could not be loaded. Check your internet connection.");
+        return;
+    }
+
+    setPyStatus("🐍 Loading Python interpreter & package manager...");
+
+    try{
+        STATE.pyodide=await loadPyodide({
+            indexURL:"https://cdn.jsdelivr.net/pyodide/v0.26.2/full/"
+        });
+
+        // Load micropip to allow installing external packages from PyPI over the web
+        await STATE.pyodide.loadPackage("micropip");
+
+        STATE.pyodide.runPython(`
+import sys
+class QuestCapture:
+    def __init__(self):
+        self.buf = ""
+    def write(self, value):
+        self.buf += str(value)
+    def flush(self):
+        pass
+    def clear(self):
+        self.buf = ""
+    def get(self):
+        value = self.buf
+        self.buf = ""
+        return value
+
+_quest_capture = QuestCapture()
+sys.stdout = _quest_capture
+sys.stderr = _quest_capture
+`);
+
+        STATE.pyodide.setStdin({
+            stdin:()=>{
+                const answer=window.prompt("Python input:");
+                return answer===null?"":answer;
+            }
+        });
+
+        pyReady=true;
+        setPyStatus("✅ Python & Package Manager Ready!", true);
+        $("output-meta").textContent="Python is ready. Write your code and click Run.";
+
+    }catch(error){
+        pyReady=false;
+        setPyStatus("❌ Failed to load Python: "+formatPythonError(error));
+        $("output-meta").textContent="Python failed to load.";
+    }
+}
+
+function insertTab(event){
+    if(event.key!=="Tab") return;
+    event.preventDefault();
+    const editor=event.target;
+    const start=editor.selectionStart;
+    const end=editor.selectionEnd;
+    const before=editor.value.slice(0,start);
+    const after=editor.value.slice(end);
+    editor.value=before+"    "+after;
+    editor.selectionStart=editor.selectionEnd=start+4;
+}
+
+window.addEventListener("DOMContentLoaded", ()=>{
+    $("run-btn").addEventListener("click", runCode);
+    $("submit-btn").addEventListener("click", submitCode);
+    $("hint-btn").addEventListener("click", showHint);
+    $("reset-code-btn").addEventListener("click", resetCode);
+    $("clear-output-btn").addEventListener("click", clearOutput);
+    $("next-lesson-btn").addEventListener("click", nextLesson);
+    $("reset-btn").addEventListener("click", resetProgress);
+    
+    // Responsive Navigation Drawer handlers
+    $("menu-btn").addEventListener("click", ()=>toggleSidebar());
+    $("sidebar-backdrop").addEventListener("click", ()=>toggleSidebar(true));
+
+    $("code-editor").addEventListener("keydown", insertTab);
+    $("code-editor").addEventListener("keydown", event=>{
+        if((event.ctrlKey || event.metaKey) && event.key==="Enter"){
+            event.preventDefault();
+            runCode();
+        }
+    });
+
+    setTimeout(()=>{
+        $("splash").style.pointerEvents="none";
+    },2200);
+
+    initPyodide();
+});
+</script>
+
+</body>
+</html>
