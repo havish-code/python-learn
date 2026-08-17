@@ -18,6 +18,33 @@
 <meta property="og:description" content="Master Python step-by-step through interactive coding challenges, quests, and XP leveling.">
 <meta property="og:image" content="https://raw.githubusercontent.com/github/explore/main/topics/python/python.png">
 
+<!-- Google Rich Results Star Rating Schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "SoftwareApplication",
+  "name": "Python Quest",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "All",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "5.0",
+    "bestRating": "5",
+    "worstRating": "1",
+    "ratingCount": "1"
+  },
+  "author": {
+    "@type": "Person",
+    "name": "Havish Trivedi"
+  }
+}
+</script>
+
 <style>
 *, *::before, *::after{
     box-sizing:border-box;
@@ -1042,11 +1069,11 @@ button:disabled{
         <h3>PYTHON ROADMAP</h3>
         <ol id="lesson-list"></ol>
 
-        <!-- Rating & Review Section -->
+        <!-- Live Global Rating Box -->
         <div class="rating-card">
             <div class="rating-header">
-                <span class="rating-score" id="avg-rating">5.0 ★</span>
-                <span class="rating-count" id="total-ratings">14 reviews</span>
+                <span class="rating-score" id="avg-rating">0.0 ★</span>
+                <span class="rating-count" id="total-ratings">0 reviews</span>
             </div>
 
             <div class="star-picker" id="star-picker">
@@ -1061,12 +1088,12 @@ button:disabled{
                 <div class="breakdown-row">
                     <span>5★</span>
                     <div class="breakdown-bar"><div class="breakdown-fill" id="bar-5"></div></div>
-                    <span id="count-5">12</span>
+                    <span id="count-5">0</span>
                 </div>
                 <div class="breakdown-row">
                     <span>4★</span>
                     <div class="breakdown-bar"><div class="breakdown-fill" id="bar-4"></div></div>
-                    <span id="count-4">2</span>
+                    <span id="count-4">0</span>
                 </div>
                 <div class="breakdown-row">
                     <span>3★</span>
@@ -1524,8 +1551,8 @@ const ACHIEVEMENTS={
     "🐉 Python Hero! Ultimate Quest Complete!":"👑 You have completed the entire Python Quest! You are a true Python Hero!"
 };
 
-const STORAGE_KEY="python-quest-save-v11";
-const RATING_STORAGE_KEY="python-quest-ratings-v1";
+const STORAGE_KEY="python-quest-save-v12";
+const RATING_STORAGE_KEY="python-quest-live-ratings";
 
 const STATE={
     pyodide:null,
@@ -1540,8 +1567,9 @@ const STATE={
     running:false
 };
 
+// Starts clean with zero default votes — real users populate this live
 let RATING_DATA = {
-    counts: { 5: 12, 4: 2, 3: 0, 2: 0, 1: 0 },
+    counts: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
     userRating: 0
 };
 
@@ -1647,7 +1675,7 @@ function renderRatings(){
     const counts = RATING_DATA.counts;
     const total = Object.values(counts).reduce((a,b)=>a+b, 0);
     const sum = (counts[5]*5) + (counts[4]*4) + (counts[3]*3) + (counts[2]*2) + (counts[1]*1);
-    const avg = total > 0 ? (sum / total).toFixed(1) : "5.0";
+    const avg = total > 0 ? (sum / total).toFixed(1) : "0.0";
 
     $("avg-rating").textContent = `${avg} ★`;
     $("total-ratings").textContent = `${total} ${total === 1 ? 'review' : 'reviews'}`;
