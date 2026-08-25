@@ -921,13 +921,14 @@ button:disabled{
         transform:translateX(0);
     }
 
+    /* Fixed: Backdrop now completely disappears when closed so no blur affects content */
     #sidebar-backdrop{
-        display:block;
+        display:none;
         position:fixed;
         inset:0;
         top:var(--header-h);
         background:rgba(0,0,0,.65);
-        backdrop-filter:blur(4px);
+        backdrop-filter:none;
         z-index:45;
         opacity:0;
         pointer-events:none;
@@ -935,8 +936,10 @@ button:disabled{
     }
 
     #sidebar-backdrop.open{
+        display:block;
         opacity:1;
         pointer-events:auto;
+        backdrop-filter:blur(4px);
     }
 
     .lesson-body{
@@ -1567,7 +1570,6 @@ const STATE={
     running:false
 };
 
-// Starts clean with zero default votes — real users populate this live
 let RATING_DATA = {
     counts: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
     userRating: 0
